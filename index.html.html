@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Biblioteca Mundo de Ideas</title><meta name="description" content="Catálogo digital de la Biblioteca Mundo de Ideas: busca libros, aparta y entérate de los talleres."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='8' width='6' height='18' fill='%231D3FA8'/%3E%3Crect x='14' y='4' width='6' height='22' fill='%23F4C430'/%3E%3Crect x='22' y='11' width='6' height='15' fill='%23C73A26'/%3E%3C/svg%3E"><style>
+/* Layout: sticky header, hero with search and a shelf of book spines, then catalog, new arrivals, rankings, events, and reader/librarian panels. */
+:root{
+  --bg:#F2F4F9; --surface:#FFFFFF; --ink:#101935; --muted:#4D5877; --line:#D5DAE8; --soft:#E7ECF8;
+  --blue:#1D3FA8; --on-blue:#FFFFFF; --yellow:#F4C430; --on-yellow:#101935;
+  --red:#C73A26; --green:#1B7048; --on-green:#FFFFFF; --star:#D69A00; --shelf:#101935;
+  --foot-bg:#101935; --foot-fg:#E9EDF8; --foot-muted:#C5CCE4;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0C1226; --surface:#151C36; --ink:#EEF1FA; --muted:#A8B1CE; --line:#2A3358; --soft:#1C2545;
+    --blue:#7D97FF; --on-blue:#0C1226; --yellow:#F4C430; --on-yellow:#101935;
+    --red:#FF8A74; --green:#5BD398; --on-green:#0C1226; --star:#F4C430; --shelf:#2A3358;
+    --foot-bg:#070B18; --foot-fg:#E9EDF8; --foot-muted:#B4BCD8;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0C1226; --surface:#151C36; --ink:#EEF1FA; --muted:#A8B1CE; --line:#2A3358; --soft:#1C2545;
+  --blue:#7D97FF; --on-blue:#0C1226; --yellow:#F4C430; --on-yellow:#101935;
+  --red:#FF8A74; --green:#5BD398; --on-green:#0C1226; --star:#F4C430; --shelf:#2A3358;
+  --foot-bg:#070B18; --foot-fg:#E9EDF8; --foot-muted:#B4BCD8;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:84px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55}
+h1,h2,h3{font-family:var(--serif);line-height:1.15;margin:0;font-weight:700;text-wrap:balance}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:20px;min-height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--serif);font-weight:700;font-size:1.15rem;white-space:nowrap}
+.brand i{display:flex;align-items:flex-end;gap:2px;height:26px}
+.brand i b{display:block;width:7px;border-radius:1px}
+.brand i b:nth-child(1){height:20px;background:var(--blue)}
+.brand i b:nth-child(2){height:26px;background:var(--yellow)}
+.brand i b:nth-child(3){height:16px;background:var(--red)}
+nav.main{display:flex;gap:4px;flex:1;overflow-x:auto;scrollbar-width:none}
+nav.main a{padding:8px 12px;border-radius:8px;text-decoration:none;color:var(--muted);font-weight:600;font-size:.95rem;white-space:nowrap}
+nav.main a:hover{background:var(--soft);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid var(--blue);background:var(--blue);color:var(--on-blue);padding:9px 16px;border-radius:8px;font-weight:700;font-size:.95rem;text-decoration:none}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.small{padding:6px 12px;font-size:.88rem}
+.btn.danger{background:transparent;border-color:var(--red);color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.who{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.who span{font-size:.9rem;color:var(--muted)}
+
+/* Hero */
+.hero{padding:56px 0 0;background:var(--surface);border-bottom:1px solid var(--line)}
+.hero h1{font-size:clamp(2.1rem,5.2vw,3.6rem);max-width:15em;letter-spacing:-.01em}
+.hero p.lead{max-width:38em;color:var(--muted);font-size:1.1rem;margin:16px 0 26px}
+.searchbar{display:flex;gap:8px;max-width:640px}
+.searchbar input{flex:1;min-width:0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{border:1.5px solid var(--line);background:transparent;color:var(--ink);padding:5px 12px;border-radius:99px;font-size:.88rem;font-weight:600}
+.chip:hover{border-color:var(--blue)}
+.shelf{margin-top:44px;display:flex;align-items:flex-end;gap:5px;overflow-x:auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));scrollbar-width:none;border-bottom:12px solid var(--shelf)}
+.shelf-wrap{max-width:1120px;margin:0 auto}
+.spine{flex:none;border:0;border-radius:3px 3px 0 0;writing-mode:vertical-rl;padding:14px 0;display:flex;align-items:center;justify-content:flex-start;font-family:var(--serif);font-weight:700;font-size:.95rem;box-shadow:inset 3px 0 0 rgba(255,255,255,.22),inset -3px 0 0 rgba(0,0,0,.16);transform-origin:bottom;transition:transform .2s}
+.spine:hover,.spine:focus-visible{transform:translateY(-14px)}
+.spine span{max-height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+@media (prefers-reduced-motion:no-preference){
+  .spine{animation:rise .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*55ms)}
+  @keyframes rise{from{transform:translateY(120%)}}
+}
+
+/* Sections */
+section.block{padding:64px 0 8px}
+.head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.head h1,.head h2{font-size:clamp(1.6rem,3.2vw,2.2rem)}
+.head p{margin:6px 0 0;color:var(--muted);max-width:34em}
+.filters{display:grid;grid-template-columns:1fr 200px auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:6px}
+.filters label.chk{display:flex;gap:8px;align-items:center;font-weight:600;font-size:.92rem;white-space:nowrap}
+.filters label.chk input{width:auto}
+.count{color:var(--muted);font-size:.92rem;margin:10px 2px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:58px 1fr auto;gap:16px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.cover{width:58px;height:80px;border-radius:3px 6px 6px 3px;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;font-family:var(--serif);font-weight:700;font-size:.68rem;line-height:1.1;box-shadow:inset 4px 0 0 rgba(255,255,255,.22),inset -2px 0 0 rgba(0,0,0,.15);overflow:hidden}
+.row h3{font-size:1.1rem}
+.row h3 button{all:unset;cursor:pointer}
+.row h3 button:hover{text-decoration:underline}
+.meta{color:var(--muted);font-size:.9rem;margin-top:2px}
+.meta button{all:unset;cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.meta button:hover{color:var(--ink)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.tag{font-size:.78rem;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--soft);color:var(--ink)}
+.tag.sv{background:var(--yellow);color:var(--on-yellow)}
+.ok{color:var(--green);font-weight:700;font-size:.86rem}
+.no{color:var(--red);font-weight:700;font-size:.86rem}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.empty{padding:36px 20px;text-align:center;color:var(--muted)}
+.stars{color:var(--star);letter-spacing:1px;font-size:.9rem}
+
+.two{display:grid;grid-template-columns:3fr 2fr;gap:28px}
+.rank{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.rank li{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:11px 16px;border-top:1px solid var(--line)}
+.rank li:first-child{border-top:0}
+.rank .n{font-family:var(--serif);font-weight:700;font-size:1.25rem;color:var(--blue)}
+.rank button{all:unset;cursor:pointer;font-weight:600}
+.rank button:hover{text-decoration:underline}
+.rank small{color:var(--muted)}
+h3.sub{font-size:1.25rem;margin-bottom:12px}
+
+/* Events */
+.event{display:grid;grid-template-columns:76px 1fr auto;gap:18px;align-items:center;padding:16px;border-top:1px solid var(--line)}
+.event:first-child{border-top:0}
+.date{background:var(--blue);color:var(--on-blue);border-radius:10px;text-align:center;padding:8px 4px;font-family:var(--serif)}
+.date b{display:block;font-size:1.7rem;line-height:1}
+.date span{font-size:.8rem;font-family:var(--sans);font-weight:600}
+.event.past{opacity:.6}
+.event h3{font-size:1.15rem}
+.event p{margin:4px 0 0;color:var(--muted);font-size:.93rem}
+.state{font-size:.8rem;font-weight:700;margin-left:8px;padding:2px 9px;border-radius:99px;background:var(--soft);vertical-align:middle;font-family:var(--sans)}
+.state.live{background:var(--green);color:var(--on-green)}
+
+/* Account & admin */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.loan{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.loan:first-of-type{border-top:0}
+.note{font-size:.9rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:9px 8px;border-top:1px solid var(--line);vertical-align:middle}
+th{font-size:.82rem;color:var(--muted);border-top:0}
+.tbl{overflow-x:auto}
+.stock{display:inline-flex;align-items:center;gap:6px}
+.stock button{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--line);background:transparent;color:var(--ink);font-weight:700;line-height:1}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fgrid .full{grid-column:1/-1}
+label.f{display:block;font-weight:600;font-size:.88rem;margin-bottom:4px}
+.log{margin:10px 0 0;padding:0;list-style:none;font-size:.88rem;color:var(--muted)}
+
+/* Dialog */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(600px,calc(100% - 28px));max-height:calc(100% - 40px)}
+dialog::backdrop{background:rgba(8,12,30,.6)}
+.dlg{padding:24px}
+.dlg .close{float:right;border:0;background:transparent;color:var(--muted);font-size:1.6rem;line-height:1;padding:0 4px}
+.tabs{display:flex;gap:6px;margin:8px 0 16px}
+.tabs button{flex:1;padding:9px;border:1.5px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;font-weight:700}
+.tabs button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:var(--on-blue)}
+.review{border-top:1px solid var(--line);padding:10px 0}
+.review p{margin:2px 0 0}
+.err{color:var(--red);font-weight:600;font-size:.9rem;min-height:1.3em;margin:8px 0 0}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+
+footer{margin-top:72px;background:var(--foot-bg);color:var(--foot-fg);padding-block:40px;border-top:1px solid var(--line)}
+footer h2{font-size:1.2rem;color:var(--yellow)}
+footer p{margin:6px 0;font-size:.92rem;color:var(--foot-muted)}
+footer ul{columns:2;margin:10px 0 0;padding-left:18px;font-size:.9rem;color:var(--foot-muted)}
+.hide{display:none!important}
+
+@media (max-width:820px){
+  html{scroll-padding-top:124px}
+  .fgrid{grid-template-columns:1fr}
+  .two,.grid2{grid-template-columns:1fr}
+  .filters{grid-template-columns:1fr}
+  .top .wrap{flex-wrap:wrap;padding-top:8px;padding-bottom:8px;gap:8px}
+  nav.main{order:3;flex-basis:100%}
+  .row{grid-template-columns:50px 1fr;}
+  .row .acts{grid-column:1/-1;justify-content:flex-start}
+  .cover{width:50px;height:70px}
+  .event{grid-template-columns:62px 1fr}
+  .event .acts{grid-column:1/-1;justify-content:flex-start}
+  .who span{display:none}
+  footer ul{columns:1}
+}
+.filters>*,.row>div,.event>div,.loan>div,.grid2>*,.two>*{min-width:0}
+@media (prefers-reduced-motion:reduce){.spine,.toast{transition:none}.spine:hover,.spine:focus-visible{transform:none}}
+nav.main a[aria-current="page"]{background:var(--soft);color:var(--ink)}
+
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.view{display:none}.view.on{display:block}
+</style></head><body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#p-inicio" aria-label="Biblioteca Mundo de Ideas, inicio"><i aria-hidden="true"><b></b><b></b><b></b></i>Mundo de Ideas</a>
+    <nav class="main" aria-label="Principal"><a href="#p-inicio">Inicio</a><a href="#p-catalogo">Catálogo</a><a href="#p-nuevos">Nuevos ingresos</a><a href="#p-populares">Lo más visto</a><a href="#p-eventos">Talleres y eventos</a><a href="#p-mis-reservas" id="navCuenta" class="hide">Mis reservas</a><a href="#p-panel" id="navAdmin" class="hide">Panel del bibliotecario</a></nav>
+    <div class="who" id="who"></div>
+  </div>
+</header>
+
+<main>
+<div class="view" data-k="inicio">
+  <div class="hero">
+    <div class="wrap">
+      <h1>¿Está disponible? Míralo antes de salir de casa.</h1>
+      <p class="lead">Busca en el catálogo de la biblioteca, aparta tu libro desde el teléfono o la computadora y entérate de los talleres que vienen.</p>
+      <div class="searchbar" role="search">
+        <label class="sr" for="heroQ">Buscar por título, autor, género o ISBN</label>
+        <input id="heroQ" type="search" placeholder="Título, autor, género o ISBN">
+        <button class="btn" id="heroGo">Buscar libro</button>
+      </div>
+      <div class="chips" id="genreChips" aria-label="Géneros"></div>
+    </div>
+    <div class="shelf-wrap"><div class="shelf" id="shelf" aria-label="Libros populares de la biblioteca"></div></div>
+  </div>
+  <section class="block"><div class="wrap">
+    <div class="head"><div><h2>Explora la biblioteca</h2></div></div>
+    <div class="grid2">
+      <div class="panel"><h3 class="sub">Catálogo</h3><p class="note" style="margin-top:0">Busca por título, autor, género o ISBN y aparta tu libro.</p><a class="btn small" href="#p-catalogo">Ver catálogo</a></div>
+      <div class="panel"><h3 class="sub">Nuevos ingresos</h3><p class="note" style="margin-top:0">Los libros que llegaron a la biblioteca en los últimos días.</p><a class="btn small" href="#p-nuevos">Ver novedades</a></div>
+      <div class="panel"><h3 class="sub">Lo más visto</h3><p class="note" style="margin-top:0">Los libros y escritores que más consultan los lectores.</p><a class="btn small" href="#p-populares">Ver ranking</a></div>
+      <div class="panel"><h3 class="sub">Talleres y eventos</h3><p class="note" style="margin-top:0">Fechas, horarios y lugares. Inscríbete con tu cuenta.</p><a class="btn small" href="#p-eventos">Ver actividades</a></div>
+    </div>
+  </div></section>
+</div>
+<div class="view" data-k="catalogo">
+  <section class="block" id="catalogo">
+    <div class="wrap">
+      <div class="head">
+        <div><h1>Catálogo</h1><p>Busca por título, autor, género o ISBN. Para apartar un libro necesitas iniciar sesión.</p></div>
+      </div>
+      <div class="filters">
+        <div><label class="sr" for="q">Buscar</label><input id="q" type="search" placeholder="Ej. García Márquez, poesía, 978…"></div>
+        <div><label class="sr" for="genre">Género</label><select id="genre"></select></div>
+        <label class="chk"><input type="checkbox" id="onlyAvail"> Solo disponibles</label>
+      </div>
+      <div class="count" id="count" aria-live="polite"></div>
+      <div class="list" id="results"></div>
+    </div>
+  </section>
+</div>
+<div class="view" data-k="nuevos">
+  <section class="block" id="novedades">
+    <div class="wrap">
+      <div class="head"><div><h1>Nuevos ingresos</h1><p>Libros que llegaron a la biblioteca en los últimos días.</p></div></div>
+      <div class="list" id="newList"></div>
+    </div>
+  </section>
+</div>
+<div class="view" data-k="populares">
+  <section class="block" id="populares">
+    <h1 class="sr">Lo más visto y escritores más leídos</h1>
+    <div class="wrap two">
+      <div id="escritoresTop"></div>
+      <div id="escritores">
+        <h2 style="font-size:clamp(1.6rem,3.2vw,2.2rem);margin-bottom:6px">Escritores más leídos</h2>
+        <p class="note" style="margin:0 0 16px">Los diez autores cuyos libros más se consultan en el catálogo.</p>
+        <ol class="rank" id="authorRank"></ol>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="view" data-k="eventos">
+  <section class="block" id="eventos">
+    <div class="wrap">
+      <div class="head"><div><h1>Talleres y eventos culturales</h1><p>Fechas de inicio y finalización, horario y lugar. Inscríbete con tu cuenta.</p></div></div>
+      <div class="list" id="events"></div>
+    </div>
+  </section>
+</div>
+<div class="view" data-k="mis-reservas">
+  <section class="block" id="cuenta">
+    <div class="wrap">
+      <div class="head"><div><h1>Mis reservas</h1><p>Puedes tener hasta 3 reservas al mismo tiempo.</p></div></div>
+      <div id="cuentaGate" class="panel hide"></div>
+      <div class="grid2" id="cuentaBody">
+        <div class="panel" id="myLoans"></div>
+        <div class="panel" id="myEvents"></div>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="view" data-k="panel">
+  <section class="block" id="admin">
+    <div class="wrap">
+      <div class="head"><div><h1>Panel del bibliotecario</h1><p>Registra libros, ajusta el stock y anota salidas y devoluciones.</p></div></div>
+      <div id="panelGate" class="panel hide"></div>
+      <div id="panelBody">
+      <div class="grid2">
+        <div class="panel">
+          <h3 class="sub">Registrar libro</h3>
+          <form id="addForm" class="fgrid">
+            <div class="full"><label class="f" for="aT">Título</label><input id="aT" required></div>
+            <div><label class="f" for="aA">Autor</label><input id="aA" required></div>
+            <div><label class="f" for="aE">Editorial</label><input id="aE"></div>
+            <div><label class="f" for="aY">Año</label><input id="aY" type="number" min="1000" max="2100" required></div>
+            <div><label class="f" for="aS">Ejemplares en stock</label><input id="aS" type="number" min="0" value="1" required></div>
+            <div><label class="f" for="aG">Género</label><input id="aG" list="gList" required></div>
+            <div><label class="f" for="aI">ISBN</label><input id="aI" placeholder="978-…"></div>
+            <div class="full"><button class="btn" type="submit">Registrar libro</button></div>
+          </form>
+          <datalist id="gList"></datalist>
+        </div>
+        <div class="panel">
+          <h3 class="sub">Salida y devolución</h3>
+          <p class="note" style="margin-top:0">Escribe el código del ejemplar o su ISBN (con un lector de código de barras se llena solo).</p>
+          <label class="f" for="scan">Código del ejemplar</label>
+          <input id="scan" placeholder="MI-0001">
+          <div class="acts" style="justify-content:flex-start;margin-top:10px">
+            <button class="btn" id="btnOut">Registrar salida</button>
+            <button class="btn ghost" id="btnIn">Registrar devolución</button>
+          </div>
+          <ul class="log" id="log"></ul>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h3 class="sub">Libros del catálogo</h3>
+        <div class="tbl"><table id="adminTable"></table></div>
+      </div>
+      <div class="panel" style="margin-top:20px">
+        <h3 class="sub">Reservas activas</h3>
+        <div id="allLoans"></div>
+      </div>
+      </div>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2>Biblioteca Mundo de Ideas</h2>
+    <p>Prototipo del Módulo 1.8, Proyecto Tecnológico de Desarrollo de Páginas Web. Instituto Nacional Isidro Menendez (INIM), Caso 5: Biblioteca Municipal, catálogo digital. Sección C-1-2. Docente: Irene Estefany Martínez de Molina.</p>
+    <p>Integrantes:</p>
+    <ul>
+      <li>Christopher Adriel Henríquez Diaz</li>
+      <li>Miguel Ángel Ruiz Vasquez</li>
+      <li>Sofia Raquel Flores Ayala</li>
+      <li>Ezequiel Alberto Hidalgo Hernández</li>
+      <li>Alejandra María Villatoro Rodríguez</li>
+      <li>Daniela De La Paz Cruz Villalta</li>
+      <li>Marcos Alejandro Gómez Valladares</li>
+      <li>Scarleth Elizabeth Gonzales</li>
+    </ul>
+    <p style="margin-top:16px">Los libros, ISBN, existencias, opiniones y fechas de eventos son datos de ejemplo.</p>
+  </div>
+</footer>
+
+<!-- Book dialog -->
+<dialog id="bookDlg" aria-labelledby="bkTitle"><div class="dlg" id="bookBody"></div></dialog>
+<!-- Auth dialog -->
+<dialog id="authDlg" aria-labelledby="authTitle">
+  <div class="dlg">
+    <button class="close" data-close aria-label="Cerrar">&times;</button>
+    <h2 id="authTitle" style="font-size:1.5rem">Tu cuenta</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabIn" aria-selected="true">Iniciar sesión</button>
+      <button role="tab" id="tabUp" aria-selected="false">Crear cuenta</button>
+    </div>
+    <form id="authForm">
+      <div id="nameWrap" class="hide" style="margin-bottom:10px"><label class="f" for="uName">Nombre completo</label><input id="uName" autocomplete="name"></div>
+      <div style="margin-bottom:10px"><label class="f" for="uMail">Correo electrónico</label><input id="uMail" type="email" required autocomplete="email"></div>
+      <div><label class="f" for="uPass">Contraseña</label><input id="uPass" type="password" required minlength="6" autocomplete="current-password"></div>
+      <p class="err" id="authErr" role="alert"></p>
+      <button class="btn" type="submit" id="authGo" style="width:100%">Iniciar sesión</button>
+    </form>
+    <p class="note" style="margin-bottom:0">Cuentas de prueba: <b>lector@demo.sv</b> / lector123 &nbsp;·&nbsp; <b>admin@demo.sv</b> / admin123 (bibliotecario).</p>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- Utilidades ---------- */
+const Q = s => document.querySelector(s);
+/* En páginas donde un elemento no existe, $ devuelve un div suelto para que el código compartido no falle */
+const $ = s => Q(s) || document.createElement('div');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const DAY = 86400000;
+const today = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const daysFrom = n => new Date(today().getTime() + n*DAY);
+const fmt = d => d.toLocaleDateString('es-SV',{day:'numeric',month:'long'});
+const fmtShort = d => d.toLocaleDateString('es-SV',{month:'short'}).replace('.','');
+const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+const pad = n => String(n).padStart(4,'0');
+const code = b => 'MI-' + pad(b.id);
+
+/* ---------- Datos de ejemplo ---------- */
+const palette = [
+  {bg:'#1D3FA8',fg:'#FFFFFF'},{bg:'#F4C430',fg:'#101935'},{bg:'#C73A26',fg:'#FFFFFF'},
+  {bg:'#0E7C86',fg:'#FFFFFF'},{bg:'#101935',fg:'#F4C430'},{bg:'#E3E8F5',fg:'#101935'}
+];
+const R = (name,stars,text) => ({name,stars,text});
+let books = [
+ {t:'Cien años de soledad',a:'Gabriel García Márquez',g:'Novela',y:1967,stock:3,views:128,d:'La historia de varias generaciones de la familia Buendía en el pueblo imaginario de Macondo.',rv:[R('Camila R.',5,'Me costó entrar con tantos nombres repetidos, pero después no pude soltarlo.')]},
+ {t:'La casa de los espíritus',a:'Isabel Allende',g:'Novela',y:1982,stock:2,views:97,d:'La familia Trueba y sus mujeres a lo largo de varias generaciones, entre lo cotidiano y lo mágico.',rv:[R('Diego M.',5,'Muy buena para empezar con literatura latinoamericana.')]},
+ {t:'Rayuela',a:'Julio Cortázar',g:'Novela',y:1963,stock:1,views:54,waiting:1,d:'Una novela que se puede leer en más de un orden, siguiendo a Horacio Oliveira entre París y Buenos Aires.',rv:[]},
+ {t:'Ficciones',a:'Jorge Luis Borges',g:'Cuento',y:1944,stock:2,views:61,d:'Cuentos sobre laberintos, bibliotecas, espejos y el infinito.',rv:[R('Prof. Linares',5,'Ideal para clases de análisis literario.')]},
+ {t:'Veinte poemas de amor y una canción desesperada',a:'Pablo Neruda',g:'Poesía',y:1924,stock:4,views:88,d:'Poemario sobre el deseo, el amor y la despedida.',rv:[R('Valeria S.',4,'Hay poemas que releí muchas veces.')]},
+ {t:'Cuentos de barro',a:'Salarrué',g:'Cuento',y:1933,stock:3,views:73,sv:true,d:'Relatos de la vida campesina salvadoreña, escritos con el habla y los paisajes del país.',rv:[R('Kevin A.',5,'Lectura obligada para quien quiera conocer la literatura salvadoreña.')]},
+ {t:'Un día en la vida',a:'Manlio Argueta',g:'Novela',y:1980,stock:2,views:69,sv:true,d:'Un día en la vida de una mujer campesina, en medio de la violencia que vivía El Salvador a finales de los años setenta.',rv:[]},
+ {t:'El principito',a:'Antoine de Saint-Exupéry',g:'Infantil',y:1943,stock:5,views:112,d:'Un piloto perdido en el desierto conoce a un niño que viene de otro planeta.',rv:[R('Familia Portillo',5,'Lo leímos en voz alta con mis hijos.')]},
+ {t:'Don Quijote de la Mancha',a:'Miguel de Cervantes',g:'Clásicos',y:1605,stock:1,views:40,d:'Un hidalgo que enloquece leyendo libros de caballería sale a recorrer La Mancha con su escudero Sancho Panza.',rv:[]},
+ {t:'Pedro Páramo',a:'Juan Rulfo',g:'Novela',y:1955,stock:2,views:58,d:'Juan Preciado viaja a Comala para buscar a su padre y encuentra un pueblo habitado por voces.',rv:[]},
+ {t:'Crónica de una muerte anunciada',a:'Gabriel García Márquez',g:'Novela',y:1981,stock:0,waiting:2,views:66,d:'Reconstrucción del asesinato de Santiago Nasar, que todo el pueblo sabía que iba a ocurrir.',rv:[]},
+ {t:'Veinte mil leguas de viaje submarino',a:'Julio Verne',g:'Aventura',y:1870,stock:3,views:47,d:'El profesor Aronnax y el capitán Nemo recorren los océanos a bordo del Nautilus.',rv:[R('Mateo H.',4,'Aventura con mucha ciencia para su época.')]},
+ {t:'Como agua para chocolate',a:'Laura Esquivel',g:'Novela',y:1989,stock:2,views:52,ingreso:-3,d:'Tita expresa sus emociones a través de la cocina, en el México de la Revolución.',rv:[]},
+ {t:'Insensatez',a:'Horacio Castellanos Moya',g:'Novela',y:2004,stock:2,views:35,sv:true,ingreso:-4,d:'Un corrector de textos revisa un informe sobre atrocidades cometidas contra población indígena y empieza a perder el equilibrio.',rv:[]},
+ {t:'Pobrecito poeta que era yo',a:'Roque Dalton',g:'Novela',y:1976,stock:1,views:44,sv:true,d:'Novela del poeta salvadoreño que mezcla memorias, ficción y sátira.',rv:[]},
+ {t:'Cenizas de Izalco',a:'Claribel Alegría y Darwin Flakoll',g:'Novela',y:1966,stock:2,views:31,sv:true,ingreso:-6,d:'Una mujer vuelve a El Salvador y reconstruye, entre cartas y recuerdos, la historia de su familia y la matanza de 1932.',rv:[]},
+ {t:'El señor presidente',a:'Miguel Ángel Asturias',g:'Novela',y:1946,stock:2,views:38,ingreso:-9,d:'Retrato del miedo y la corrupción bajo una dictadura latinoamericana.',rv:[]},
+ {t:'La tregua',a:'Mario Benedetti',g:'Novela',y:1960,stock:2,views:29,d:'El diario de un oficinista viudo que se acerca a la jubilación y se enamora de una compañera de trabajo.',rv:[]},
+ {t:'Desolación',a:'Gabriela Mistral',g:'Poesía',y:1922,stock:2,views:26,ingreso:-10,d:'El primer libro de poemas de Gabriela Mistral, sobre el dolor, la pérdida y la fe.',rv:[]}
+].map((b,i)=>({id:i+1,isbn:'978-99900-'+String(i+1).padStart(3,'0')+'-0',waiting:0,publisher:'',...b,
+  ingreso: b.ingreso!==undefined ? daysFrom(b.ingreso) : null}));
+
+const events = [
+ {id:1,t:'Taller de escritura creativa',d:'Ejercicios semanales para empezar a escribir cuentos y poemas. No necesitas experiencia.',s:'2026-10-24',e:'2026-11-14',time:'Sábados, 9:00 a 11:00 a. m.',place:'Sala de talleres'},
+ {id:2,t:'Círculo de lectura juvenil',d:'Para adolescentes: leemos un libro y lo comentamos entre todos.',s:'2026-10-21',e:'2026-11-18',time:'Miércoles, 3:00 a 4:30 p. m.',place:'Sala de lectura'},
+ {id:3,t:'Hora del cuento infantil',d:'Cuentos en voz alta y juegos con palabras para niñas y niños.',s:'2026-10-31',e:'2026-10-31',time:'Sábado, 10:00 a. m.',place:'Rincón infantil'},
+ {id:4,t:'Taller de búsqueda de información en línea',d:'Aprende a investigar en internet y a usar las computadoras de la biblioteca.',s:'2026-10-26',e:'2026-10-30',time:'Lunes a viernes, 2:00 a 3:00 p. m.',place:'Sala de cómputo'},
+ {id:5,t:'Encuentro con escritores locales',d:'Autores de la zona presentan sus obras y conversan con el público.',s:'2026-11-05',e:'2026-11-05',time:'Jueves, 5:00 p. m.',place:'Salón principal'}
+];
+const parseD = s => new Date(s+'T00:00:00');
+
+let users = [
+ {email:'lector@demo.sv',name:'Lectora de prueba',pass:'lector123',role:'lector',loans:[],events:[]},
+ {email:'admin@demo.sv',name:'Bibliotecaria de prueba',pass:'admin123',role:'admin',loans:[],events:[]}
+];
+let me = null, movements = [];
+
+/* ---------- Estado compartido entre páginas (localStorage) ---------- */
+const KEY='mundo-de-ideas-v1';
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify({books,users,movements,me:me?me.email:null})); }catch(e){} }
+(function load(){ try{
+  const s=JSON.parse(localStorage.getItem(KEY)); if(!s) return;
+  books=s.books.map(b=>({...b,ingreso:b.ingreso?new Date(b.ingreso):null}));
+  users=s.users.map(u=>({...u,loans:u.loans.map(l=>({...l,due:new Date(l.due)}))}));
+  movements=s.movements||[]; me=s.me?(users.find(u=>u.email===s.me)||null):null;
+}catch(e){} })();
+addEventListener('pagehide',save);
+
+/* ---------- Helpers de dominio ---------- */
+const colorOf = b => palette[(b.id-1) % palette.length];
+const avg = b => b.rv.length ? b.rv.reduce((s,r)=>s+r.stars,0)/b.rv.length : 0;
+const starStr = n => '★'.repeat(Math.round(n)) + '☆'.repeat(5-Math.round(n));
+const avail = b => b.stock>0 ? `<span class="ok">Disponible · ${b.stock} ${b.stock===1?'ejemplar':'ejemplares'}</span>` : `<span class="no">Agotado${b.waiting?` · ${b.waiting} en espera`:''}</span>`;
+const byId = id => books.find(b=>b.id===id);
+const genres = () => [...new Set(books.map(b=>b.g))].sort((a,b)=>a.localeCompare(b,'es'));
+const bookByCode = c => { const k = norm(c).replace(/[^a-z0-9]/g,''); return books.find(b => norm(code(b)).replace(/[^a-z0-9]/g,'')===k || b.isbn.replace(/\D/g,'')===k.replace(/\D/g,'') && k.replace(/\D/g,'').length>=9); };
+
+function toast(msg){ save();
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ---------- Render: componentes ---------- */
+function bookRow(b, opts={}){
+  const c = colorOf(b);
+  const rating = b.rv.length ? `<span class="stars" title="${avg(b).toFixed(1)} de 5">${starStr(avg(b))}</span> <span class="note">(${b.rv.length})</span>` : '';
+  const isNew = b.ingreso && (today()-b.ingreso)/DAY <= 30;
+  return `<div class="row">
+    <div class="cover" style="background:${c.bg};color:${c.fg}" aria-hidden="true">${esc(b.t)}</div>
+    <div>
+      <h3><button data-open="${b.id}">${esc(b.t)}</button></h3>
+      <div class="meta"><button data-author="${esc(b.a)}">${esc(b.a)}</button> · ${b.y}</div>
+      <div class="tags"><span class="tag">${esc(b.g)}</span>${b.sv?'<span class="tag sv">Autor salvadoreño</span>':''}${isNew&&!opts.hideNew?'<span class="tag">Nuevo</span>':''}${avail(b)} ${rating}</div>
+      ${opts.showIngreso && b.ingreso ? `<div class="note" style="margin-top:4px">Ingresó el ${fmt(b.ingreso)}</div>`:''}
+    </div>
+    <div class="acts">
+      <button class="btn ghost small" data-open="${b.id}">Ver detalle</button>
+      <button class="btn small" data-reserve="${b.id}" ${b.stock<1?'disabled':''}>Reservar</button>
+    </div>
+  </div>`;
+}
+
+function renderChips(){
+  const G=genres(), sel=$('#genre'), keep=sel.value;
+  $('#genreChips').innerHTML = G.map(g=>`<button class="chip" data-genre="${esc(g)}">${esc(g)}</button>`).join('');
+  sel.innerHTML = '<option value="">Todos los géneros</option>' + G.map(g=>`<option>${esc(g)}</option>`).join('');
+  sel.value = keep;
+  $('#gList').innerHTML = G.map(g=>`<option value="${esc(g)}">`).join('');
+}
+
+function renderShelf(){
+  const hs=[190,222,172,206,236,182,216,196,226,176,210,186,230,200];
+  const ws=[46,54,42,58,50,44,56,48,52,60,44,54,48,56];
+  const top=[...books].sort((a,b)=>b.views-a.views).slice(0,14);
+  $('#shelf').innerHTML = top.map((b,i)=>{
+    const c=colorOf(b);
+    return `<button class="spine" style="--i:${i};height:${hs[i]}px;width:${ws[i]}px;background:${c.bg};color:${c.fg}" data-open="${b.id}" aria-label="${esc(b.t)}, de ${esc(b.a)}"><span>${esc(b.t)}</span></button>`;
+  }).join('');
+}
+
+function renderCatalog(){
+  const q = norm($('#q').value.trim()), g = $('#genre').value, only = $('#onlyAvail').checked;
+  const qd = q.replace(/\D/g,'');
+  const list = books.filter(b=>{
+    if(g && b.g!==g) return false;
+    if(only && b.stock<1) return false;
+    if(!q) return true;
+    return norm(b.t).includes(q) || norm(b.a).includes(q) || norm(b.g).includes(q) ||
+           b.isbn.includes(q) || (qd.length>=4 && b.isbn.replace(/\D/g,'').includes(qd)) || norm(code(b)).includes(q);
+  }).sort((a,b)=>a.t.localeCompare(b.t,'es'));
+  $('#count').textContent = `${list.length} ${list.length===1?'título':'títulos'}`;
+  $('#results').innerHTML = list.length ? list.map(b=>bookRow(b)).join('') :
+    '<div class="empty">No encontramos ese título. Prueba con el autor, el género o parte del ISBN.</div>';
+}
+
+function renderNew(){
+  const list = books.filter(b=>b.ingreso).sort((a,b)=>b.ingreso-a.ingreso);
+  $('#newList').innerHTML = list.length ? list.map(b=>bookRow(b,{showIngreso:true,hideNew:true})).join('') :
+    '<div class="empty">Todavía no hay nuevos ingresos registrados.</div>';
+}
+
+function renderTop(){
+  const top = [...books].sort((a,b)=>b.views-a.views).slice(0,5);
+  $('#escritoresTop').innerHTML = `<h2 style="font-size:clamp(1.6rem,3.2vw,2.2rem);margin-bottom:6px">Lo más visto de la semana</h2>
+    <p class="note" style="margin:0 0 16px">Los libros que más consultaron los lectores.</p>
+    <div class="list">${top.map(b=>bookRow(b)).join('')}</div>`;
+  const map = {};
+  books.forEach(b=>{ (map[b.a] ||= {a:b.a,v:0,n:0}); map[b.a].v+=b.views; map[b.a].n++; });
+  const rank = Object.values(map).sort((x,y)=>y.v-x.v).slice(0,10);
+  $('#authorRank').innerHTML = rank.map((r,i)=>`<li><span class="n">${i+1}</span><button data-author="${esc(r.a)}">${esc(r.a)}</button><small>${r.n} ${r.n===1?'título':'títulos'}</small></li>`).join('');
+}
+
+function eventState(ev){
+  const t=today(), s=parseD(ev.s), e=parseD(ev.e);
+  if(e<t) return {k:'past',l:'Finalizado'};
+  if(s<=t) return {k:'live',l:'En curso'};
+  const n=Math.round((s-t)/DAY);
+  return {k:'soon',l: n===1?'Mañana':`Empieza en ${n} días`};
+}
+function renderEvents(){
+  const list=[...events].sort((a,b)=>parseD(a.s)-parseD(b.s));
+  $('#events').innerHTML = list.map(ev=>{
+    const st=eventState(ev), s=parseD(ev.s), e=parseD(ev.e), same=ev.s===ev.e;
+    const joined = me && me.events.includes(ev.id);
+    return `<div class="event ${st.k==='past'?'past':''}">
+      <div class="date" aria-hidden="true"><b>${s.getDate()}</b><span>${fmtShort(s)}</span></div>
+      <div>
+        <h3>${esc(ev.t)}<span class="state ${st.k==='live'?'live':''}">${st.l}</span></h3>
+        <p>${esc(ev.d)}</p>
+        <p><b>${same?fmt(s):`Del ${fmt(s)} al ${fmt(e)}`}</b> · ${esc(ev.time)} · ${esc(ev.place)}</p>
+      </div>
+      <div class="acts"><button class="btn ${joined?'ghost':''} small" data-join="${ev.id}" ${st.k==='past'?'disabled':''}>${joined?'Inscrito, cancelar':'Inscribirme'}</button></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAccount(){
+  const on = me && me.role==='lector';
+  $('#navCuenta').classList.toggle('hide',!on);
+  $('#cuentaBody').classList.toggle('hide',!on);
+  const g=$('#cuentaGate'); g.classList.toggle('hide',!!on);
+  g.innerHTML = me ? '<p class="note" style="margin:0">Los bibliotecarios gestionan las reservas desde el <a href="#p-panel">panel del bibliotecario</a>.</p>'
+    : '<p style="margin:0 0 12px">Inicia sesión para ver tus reservas y talleres.</p><button class="btn" data-login>Iniciar sesión</button>';
+  if(!on) return;
+  const loans = me.loans;
+  $('#myLoans').innerHTML = `<h3 class="sub">Libros apartados (${loans.length} de 3)</h3>` +
+    (loans.length ? loans.map(l=>{
+      const b=byId(l.id);
+      return `<div class="loan"><div><b>${esc(b.t)}</b><div class="note">${esc(b.a)} · devolver el ${fmt(l.due)}</div></div>
+        <div class="acts"><button class="btn ghost small" data-renew="${b.id}">Renovar 7 días</button><button class="btn danger small" data-cancel="${b.id}">Cancelar</button></div></div>`;
+    }).join('') : '<p class="note">Aún no has apartado libros. Busca uno en el catálogo y pulsa Reservar.</p>') +
+    `<p class="note" style="margin-bottom:0">Te enviaremos un correo a ${esc(me.email)} un día antes de la fecha de devolución.</p>`;
+  const evs = events.filter(e=>me.events.includes(e.id));
+  $('#myEvents').innerHTML = `<h3 class="sub">Mis talleres y eventos</h3>` +
+    (evs.length ? evs.map(ev=>`<div class="loan"><div><b>${esc(ev.t)}</b><div class="note">${fmt(parseD(ev.s))} · ${esc(ev.time)}</div></div></div>`).join('')
+      : '<p class="note">Todavía no te has inscrito a ninguna actividad.</p>');
+}
+
+function renderAdmin(){
+  const on = me && me.role==='admin';
+  $('#navAdmin').classList.toggle('hide',!on);
+  $('#panelBody').classList.toggle('hide',!on);
+  const g=$('#panelGate'); g.classList.toggle('hide',!!on);
+  g.innerHTML = me ? '<p class="note" style="margin:0">Esta página es solo para bibliotecarios.</p>'
+    : '<p style="margin:0 0 12px">Inicia sesión como bibliotecario para entrar al panel.</p><button class="btn" data-login>Iniciar sesión</button>';
+  if(!on) return;
+  $('#adminTable').innerHTML = `<thead><tr><th>Código</th><th>Título</th><th>Autor</th><th>Año</th><th>Stock</th><th></th></tr></thead><tbody>` +
+    [...books].sort((a,b)=>a.id-b.id).map(b=>`<tr><td>${code(b)}</td><td>${esc(b.t)}</td><td>${esc(b.a)}</td><td>${b.y}</td>
+      <td><span class="stock"><button data-stock="${b.id}" data-d="-1" aria-label="Quitar un ejemplar">−</button><b>${b.stock}</b><button data-stock="${b.id}" data-d="1" aria-label="Agregar un ejemplar">+</button></span></td>
+      <td><button class="btn danger small" data-baja="${b.id}">Dar de baja</button></td></tr>`).join('') + '</tbody>';
+  const all = users.flatMap(u=>u.loans.map(l=>({u,l})));
+  $('#allLoans').innerHTML = all.length ? all.map(({u,l})=>`<div class="loan"><div><b>${esc(byId(l.id).t)}</b><div class="note">${esc(u.name)} (${esc(u.email)}) · devolver el ${fmt(l.due)}</div></div></div>`).join('')
+    : '<p class="note">No hay reservas activas.</p>';
+  $('#log').innerHTML = movements.slice(0,5).map(m=>`<li>${esc(m)}</li>`).join('');
+}
+
+function renderWho(){
+  $('#who').innerHTML = me
+    ? `<span>${esc(me.name)}${me.role==='admin'?' · Bibliotecario':''}</span><button class="btn ghost small" id="btnOutSess">Cerrar sesión</button>`
+    : `<button class="btn small" id="btnLogin">Iniciar sesión</button>`;
+}
+
+function renderAll(){
+  renderChips(); renderShelf(); renderCatalog(); renderNew(); renderTop(); renderEvents(); renderAccount(); renderAdmin(); renderWho(); save();
+}
+
+/* ---------- Detalle de libro ---------- */
+let openId = null;
+function openBook(id, count=true){
+  const b = byId(id); if(!b) return;
+  if(count){ b.views++; renderTop(); renderShelf(); }
+  openId = id;
+  const c = colorOf(b);
+  $('#bookBody').innerHTML = `
+    <button class="close" data-close aria-label="Cerrar">&times;</button>
+    <div style="display:grid;grid-template-columns:84px 1fr;gap:18px;margin-bottom:10px">
+      <div class="cover" style="width:84px;height:116px;font-size:.85rem;background:${c.bg};color:${c.fg}" aria-hidden="true">${esc(b.t)}</div>
+      <div>
+        <h2 id="bkTitle" style="font-size:1.5rem">${esc(b.t)}</h2>
+        <div class="meta">${esc(b.a)} · ${b.y}</div>
+        <div class="tags"><span class="tag">${esc(b.g)}</span>${b.sv?'<span class="tag sv">Autor salvadoreño</span>':''}</div>
+        <div style="margin-top:8px">${avail(b)}</div>
+      </div>
+    </div>
+    <p>${esc(b.d)}</p>
+    <p class="note">Código ${code(b)} · ISBN ${esc(b.isbn)}${b.publisher?` · Editorial ${esc(b.publisher)}`:''}</p>
+    <div class="acts" style="justify-content:flex-start;margin:12px 0 18px">
+      <button class="btn" data-reserve="${b.id}" ${b.stock<1?'disabled':''}>Reservar este libro</button>
+    </div>
+    <h3 class="sub" style="font-size:1.15rem">Opiniones ${b.rv.length?`<span class="stars">${starStr(avg(b))}</span> <span class="note">${avg(b).toFixed(1)} de 5 · ${b.rv.length}</span>`:''}</h3>
+    ${b.rv.length ? b.rv.map(r=>`<div class="review"><b>${esc(r.name)}</b> <span class="stars">${starStr(r.stars)}</span><p>${esc(r.text)}</p></div>`).join('') : '<p class="note">Este libro todavía no tiene opiniones. Sé la primera persona en dejar una.</p>'}
+    <form id="rvForm" style="margin-top:14px">
+      <div class="fgrid">
+        <div><label class="f" for="rvS">Tu calificación</label>
+          <select id="rvS"><option value="5">5 · Excelente</option><option value="4">4 · Muy bueno</option><option value="3">3 · Bueno</option><option value="2">2 · Regular</option><option value="1">1 · No me gustó</option></select></div>
+        <div class="full"><label class="f" for="rvT">Tu opinión</label><textarea id="rvT" rows="3" required placeholder="¿Qué te pareció?"></textarea></div>
+        <div class="full"><button class="btn" type="submit">Publicar opinión</button></div>
+      </div>
+    </form>`;
+  const dlg=$('#bookDlg'); if(!dlg.open) dlg.showModal();
+}
+
+/* ---------- Acciones ---------- */
+function reserve(id){
+  const b=byId(id);
+  if(!me){ openAuth(); toast('Inicia sesión para reservar'); return; }
+  if(me.role==='admin'){ toast('Los bibliotecarios gestionan las reservas desde su panel'); return; }
+  if(me.loans.some(l=>l.id===id)){ toast('Ya tienes este libro reservado'); return; }
+  if(me.loans.length>=3){ toast('Ya tienes 3 reservas. Cancela una para apartar otro libro'); return; }
+  if(b.stock<1){ toast('Este libro no tiene ejemplares disponibles'); return; }
+  b.stock--; me.loans.push({id,due:daysFrom(7)});
+  toast(`Reservaste “${b.t}”. Devuélvelo antes del ${fmt(daysFrom(7))}`);
+  renderAll(); if($('#bookDlg').open) openBook(id,false);
+}
+function renew(id){
+  const b=byId(id), l=me.loans.find(x=>x.id===id);
+  if(b.waiting>0){ toast('No se puede renovar: otra persona está esperando este libro'); return; }
+  l.due=new Date(l.due.getTime()+7*DAY);
+  toast(`Renovado hasta el ${fmt(l.due)}`); renderAccount(); renderAdmin();
+}
+function cancelLoan(id){
+  me.loans=me.loans.filter(l=>l.id!==id); byId(id).stock++;
+  toast('Reserva cancelada'); renderAll();
+{ const P=new URLSearchParams(location.search);
+  if(Q('#results') && (P.get('q')||P.get('genero'))){ $('#q').value=P.get('q')||''; $('#genre').value=P.get('genero')||''; renderCatalog(); } }
+}
+function joinEvent(id){
+  if(!me){ openAuth(); toast('Inicia sesión para inscribirte'); return; }
+  const i=me.events.indexOf(id);
+  if(i>=0){ me.events.splice(i,1); toast('Inscripción cancelada'); }
+  else { me.events.push(id); toast('Listo, quedaste inscrito'); }
+  renderEvents(); renderAccount();
+}
+function searchFor(q,g=''){ $('#q').value=q; $('#genre').value=g; $('#onlyAvail').checked=false; renderCatalog(); if(location.hash==='#p-catalogo') scrollTo({top:0,behavior:smooth()}); else location.hash='#p-catalogo'; }
+
+/* ---------- Sesión ---------- */
+let mode='in';
+function setMode(m){
+  mode=m;
+  $('#tabIn').setAttribute('aria-selected',m==='in'); $('#tabUp').setAttribute('aria-selected',m==='up');
+  $('#nameWrap').classList.toggle('hide',m==='in'); $('#uName').required = m==='up';
+  $('#authGo').textContent = m==='in'?'Iniciar sesión':'Crear cuenta';
+  $('#uPass').autocomplete = m==='in'?'current-password':'new-password';
+  $('#authErr').textContent='';
+}
+function openAuth(){ setMode('in'); const d=$('#authDlg'); if(!d.open) d.showModal(); }
+
+$('#tabIn').onclick=()=>setMode('in');
+$('#tabUp').onclick=()=>setMode('up');
+$('#authForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const mail=$('#uMail').value.trim().toLowerCase(), pass=$('#uPass').value, err=$('#authErr');
+  const found=users.find(u=>u.email===mail);
+  if(mode==='in'){
+    if(!found){ err.textContent='No existe una cuenta con ese correo. Usa “Crear cuenta” para registrarte.'; return; }
+    if(found.pass!==pass){ err.textContent='La contraseña no es correcta. Revísala e inténtalo de nuevo.'; return; }
+    me=found;
+  } else {
+    if(found){ err.textContent='Ese correo ya tiene una cuenta. Inicia sesión.'; return; }
+    me={email:mail,name:$('#uName').value.trim(),pass,role:'lector',loans:[],events:[]}; users.push(me);
+  }
+  $('#authDlg').close(); $('#authForm').reset();
+  toast(`Hola, ${me.name.split(' ')[0]}`); renderAll();
+});
+
+/* ---------- Eventos globales ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a'); if(!t) return;
+  if(t.dataset.open) { openBook(+t.dataset.open); return; }
+  if(t.dataset.reserve){ reserve(+t.dataset.reserve); return; }
+  if(t.dataset.author){ if($('#bookDlg').open) $('#bookDlg').close(); searchFor(t.dataset.author); return; }
+  if(t.dataset.genre){ searchFor('',t.dataset.genre); return; }
+  if(t.dataset.login!==undefined){ openAuth(); return; }
+  if(t.dataset.join){ joinEvent(+t.dataset.join); return; }
+  if(t.dataset.renew){ renew(+t.dataset.renew); return; }
+  if(t.dataset.cancel){ cancelLoan(+t.dataset.cancel); return; }
+  if(t.dataset.close!==undefined){ t.closest('dialog').close(); return; }
+  if(t.dataset.stock){ const b=byId(+t.dataset.stock); b.stock=Math.max(0,b.stock+ +t.dataset.d); renderAll(); return; }
+  if(t.dataset.baja){
+    const id=+t.dataset.baja;
+    if(users.some(u=>u.loans.some(l=>l.id===id))){ toast('No se puede dar de baja: tiene reservas activas'); return; }
+    const b=byId(id); books=books.filter(x=>x.id!==id); toast(`“${b.t}” se dio de baja`); renderAll(); return;
+  }
+  if(t.id==='btnLogin'){ openAuth(); return; }
+  if(t.id==='btnOutSess'){ me=null; toast('Cerraste sesión'); renderAll(); return; }
+});
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{ if(e.target===d) d.close(); }));
+
+$('#heroGo').onclick=()=>searchFor($('#heroQ').value);
+$('#heroQ').addEventListener('keydown',e=>{ if(e.key==='Enter') searchFor($('#heroQ').value); });
+$('#q').addEventListener('input',renderCatalog);
+$('#genre').addEventListener('change',renderCatalog);
+$('#onlyAvail').addEventListener('change',renderCatalog);
+
+document.addEventListener('submit',e=>{
+  if(e.target.id==='rvForm'){
+    e.preventDefault();
+    if(!me){ openAuth(); toast('Inicia sesión para dejar tu opinión'); return; }
+    const b=byId(openId);
+    b.rv.push({name:me.name,stars:+$('#rvS').value,text:$('#rvT').value.trim()});
+    toast('Opinión publicada'); openBook(openId,false); renderAll();
+  }
+});
+
+$('#addForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const id=Math.max(0,...books.map(b=>b.id))+1;
+  books.push({id,t:$('#aT').value.trim(),a:$('#aA').value.trim(),publisher:$('#aE').value.trim(),y:+$('#aY').value,
+    stock:+$('#aS').value,g:$('#aG').value.trim(),isbn:$('#aI').value.trim()||('978-99900-'+String(id).padStart(3,'0')+'-0'),
+    views:0,waiting:0,d:'Recién agregado al catálogo.',rv:[],ingreso:today()});
+  e.target.reset(); $('#aS').value=1;
+  toast('Libro registrado. Ya aparece en Nuevos ingresos'); renderAll();
+});
+
+function movement(kind){
+  const b=bookByCode($('#scan').value);
+  if(!b){ toast('No encontramos ese código. Revisa e inténtalo de nuevo'); return; }
+  if(kind==='out'){
+    if(b.stock<1){ toast('No quedan ejemplares disponibles de ese libro'); return; }
+    b.stock--; movements.unshift(`Salida: ${b.t} (${code(b)})`);
+  } else { b.stock++; movements.unshift(`Devolución: ${b.t} (${code(b)})`); }
+  $('#scan').value=''; $('#scan').focus(); toast(kind==='out'?'Salida registrada':'Devolución registrada'); renderAll();
+}
+$('#btnOut').onclick=()=>movement('out');
+$('#btnIn').onclick=()=>movement('in');
+$('#scan').addEventListener('keydown',e=>{ if(e.key==='Enter') movement('out'); });
+
+renderAll();
+
+/* ---------- Navegación entre secciones del sitio ---------- */
+const TITLES={'inicio': 'Biblioteca Mundo de Ideas', 'catalogo': 'Catálogo', 'nuevos': 'Nuevos ingresos', 'populares': 'Lo más visto', 'eventos': 'Talleres y eventos', 'mis-reservas': 'Mis reservas', 'panel': 'Panel del bibliotecario'};
+function route(){
+  let k=(location.hash||'').replace('#p-',''); if(!TITLES[k]) k='inicio';
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.dataset.k===k));
+  document.querySelectorAll('nav.main a').forEach(a=>a.getAttribute('href')==='#p-'+k?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+  document.title=(k==='inicio'?'':TITLES[k]+' · ')+'Biblioteca Mundo de Ideas'; scrollTo(0,0);
+}
+addEventListener('hashchange',route); route();
+</script>
+</body></html>
